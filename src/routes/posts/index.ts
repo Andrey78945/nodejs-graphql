@@ -60,7 +60,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (postEntity === null) throw reply.code(404);
+      if (postEntity === null) throw reply.code(400);
       await fastify.db.posts.delete(request.params.id);
       return postEntity;
     }
