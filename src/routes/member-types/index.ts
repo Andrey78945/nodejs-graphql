@@ -42,8 +42,15 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (typeEntity === null) throw reply.code(404);
-      return typeEntity;
+      if (typeEntity === null) throw reply.code(400);
+      const newTypeEntity = await fastify.db.memberTypes.change(
+        request.params.id,
+        {
+          discount: request.body.discount,
+          monthPostsLimit: request.body.monthPostsLimit,
+        }
+      );
+      return newTypeEntity;
     }
   );
 };
