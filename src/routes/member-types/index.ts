@@ -24,6 +24,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
+      if (typeEntity === null) throw reply.code(404);
       return typeEntity;
     }
   );
@@ -41,6 +42,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
+      if (typeEntity === null) throw reply.code(404);
       return typeEntity;
     }
   );
