@@ -44,7 +44,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         lastName: request.body.lastName,
         email: request.body.email,
       };
-      if (userEntityToCreate === null) throw reply.code(404);
+      if (userEntityToCreate === null) throw reply.code(400);
       const userEntity = await fastify.db.users.create(userEntityToCreate);
 
       return userEntity;
@@ -63,9 +63,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (userEntity === null) throw reply.code(404);
-      await fastify.db.users.delete(request.params.id);
-      return userEntity;
+      if (userEntity === null) throw reply.code(400);
+      const sibscibed: string[] = userEntity.subscribedToUserIds;
+      for (let index = 0; index < sibscibed.length; index++) {
+        //        const element = sibscibed[index];
+      }
+      const deleted = await fastify.db.users.delete(request.params.id);
+      return deleted;
     }
   );
 
@@ -118,7 +122,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (userEntity === null) throw reply.code(404);
+      if (userEntity === null) throw reply.code(400);
       return userEntity;
     }
   );

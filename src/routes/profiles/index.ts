@@ -36,7 +36,6 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<ProfileEntity> {
       const profilEntity = {
-        id: request.body.userId,
         avatar: request.body.avatar,
         sex: request.body.sex,
         birthday: request.body.birthday,
@@ -46,10 +45,17 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         memberTypeId: request.body.memberTypeId,
         userId: request.body.userId,
       };
-      if (profilEntity === null) throw reply.code(404);
-      await fastify.db.profiles.create(profilEntity);
+      const profiles: ProfileEntity[] = await fastify.db.profiles.findMany();
+      if (profiles.some((item) => item.userId === request.body.userId))
+        throw reply.code(400);
+      const idEntity = await fastify.db.profiles.findOne({
+        key: 'id',
+        equals: request.body.userId,
+      });
+      if (idEntity === null) throw reply.code(400);
+      const newProfileEntity = await fastify.db.profiles.create(profilEntity);
 
-      return profilEntity;
+      return newProfileEntity;
     }
   );
 
@@ -65,9 +71,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (profilEntity === null) throw reply.code(404);
-      await fastify.db.profiles.delete(request.params.id);
-      return profilEntity;
+      if (profilEntity === null) throw reply.code(400);
+      const deleted = await fastify.db.profiles.delete(request.params.id);
+      return deleted;
     }
   );
 
@@ -80,12 +86,33 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
+      console.log(request.body.city, 'request.body.city');
+      console.log(request.body.memberTypeId, 'request.body.memberTypeId');
       const profilEntity = await fastify.db.profiles.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      if (profilEntity === null) throw reply.code(404);
-      return profilEntity;
+      if (profilEntity === null) throw reply.code(400);
+      console.log(profilEntity.city, 'profilEntity.city');
+      console.log(profilEntity.memberTypeId, 'profilEntity.memberTypeId');
+      const newProfileEntity = await fastify.db.profiles.change(
+        request.params.id,
+        {
+          avatar: request.body.avatar ?? profilEntity.avatar,
+          sex: request.body.sex ?? profilEntity.avatar,
+          birthday: request.body.birthday ?? profilEntity.birthday,
+          country: request.body.country ?? profilEntity.country,
+          street: request.body.street ?? profilEntity.street,
+          city: request.body.city ?? profilEntity.city,
+          memberTypeId: request.body.memberTypeId ?? profilEntity.memberTypeId,
+        }
+      );
+      console.log(newProfileEntity.city, 'newProfileEntity.city');
+      console.log(
+        newProfileEntity.memberTypeId,
+        'newProfileEntity.memberTypeId'
+      );
+      return newProfileEntity;
     }
   );
 };
