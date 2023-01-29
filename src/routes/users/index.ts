@@ -148,7 +148,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       const indexId = subscribed.indexOf(request.params.id);
       if (indexId === -1) throw reply.code(400);
 
-      const newUserEntity = await fastify.db.users.change(request.params.id, {
+      const newUserEntity = await fastify.db.users.change(request.body.userId, {
         subscribedToUserIds: [
           ...subscribed.slice(0, indexId),
           ...subscribed.slice(indexId + 1),
