@@ -88,7 +88,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
           users[index].subscribedToUserIds = users[
             index
           ].subscribedToUserIds.filter((item) => item !== request.params.id);
-          await fastify.db.users.change(request.params.id, {
+          await fastify.db.users.change(users[index].id, {
             subscribedToUserIds: users[index].subscribedToUserIds,
           });
         }
