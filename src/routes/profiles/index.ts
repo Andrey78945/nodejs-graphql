@@ -89,24 +89,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      console.log(request.body.city, 'request.body.city');
-      console.log(request.body.memberTypeId, 'request.body.memberTypeId');
       const profilEntity = await fastify.db.profiles.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      console.log(profilEntity);
       if (profilEntity === null) throw reply.code(400);
-      console.log(profilEntity.city, 'profilEntity.city');
-      console.log(profilEntity.memberTypeId, 'profilEntity.memberTypeId');
       const newProfileEntity = await fastify.db.profiles.change(
         request.params.id,
         request.body
-      );
-      console.log(newProfileEntity.city, 'newProfileEntity.city');
-      console.log(
-        newProfileEntity.memberTypeId,
-        'newProfileEntity.memberTypeId'
       );
       return newProfileEntity;
     }
