@@ -82,10 +82,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         }
       }
 
-      const sibscibed: string[] = userEntity.subscribedToUserIds;
-      for (let index = 0; index < sibscibed.length; index++) {
-        //        const element = sibscibed[index];
+      const users = await fastify.db.users.findMany();
+      for (let index = 0; index < users.length; index++) {
+        if (users[index].subscribedToUserIds.includes(request.params.id)) {
+          users[index].subscribedToUserIds = users[
+            index
+          ].subscribedToUserIds.filter((item) => item !== request.params.id);
+          await fastify.db.users.change(request.params.id, {
+            subscribedToUserIds: users[index].subscribedToUserIds,
+          });
+        }
       }
+
       const deleted = await fastify.db.users.delete(request.params.id);
       return deleted;
     }
@@ -101,16 +109,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<UserEntity> {
       if (!isUUID(request.params.id)) throw reply.code(400);
+      if (!isUUID(request.body.userId)) throw reply.code(400);
+
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
-        equals: request.params.id,
+        equals: request.body.userId,
       });
       if (userEntity === null) throw reply.code(404);
-      if (!isUUID(request.body.userId)) throw reply.code(400);
-      const newUserEntity = await fastify.db.users.change(request.params.id, {
+
+      const newUserEntity = await fastify.db.users.change(request.body.userId, {
         subscribedToUserIds: [
           ...userEntity.subscribedToUserIds,
-          request.body.userId,
+          request.params.id,
         ],
       });
       return newUserEntity;
@@ -130,14 +140,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         throw reply.code(400);
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
-        equals: request.params.id,
+        equals: request.body.userId,
       });
       if (userEntity === null) throw reply.code(404);
+
+      const subscribed = userEntity.subscribedToUserIds;
+      const indexId = subscribed.indexOf(request.params.id);
+      if (indexId === -1) throw reply.code(400);
+
       const newUserEntity = await fastify.db.users.change(request.params.id, {
         subscribedToUserIds: [
-          ...userEntity.subscribedToUserIds.filter(
-            (item) => item !== request.body.userId
-          ),
+          ...subscribed.slice(0, indexId),
+          ...subscribed.slice(indexId + 1),
         ],
       });
       return newUserEntity;
