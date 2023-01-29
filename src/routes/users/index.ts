@@ -6,6 +6,7 @@ import {
   subscribeBodySchema,
 } from './schemas';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
+import isUUID from '../../utils/validate';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -22,6 +23,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
+      if (!isUUID(request.params.id)) throw reply.code(404);
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
         equals: request.params.id,
@@ -59,11 +61,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
+      if (!isUUID(request.params.id)) throw reply.code(400);
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      if (userEntity === null) throw reply.code(400);
+      if (userEntity === null) throw reply.code(404);
       const sibscibed: string[] = userEntity.subscribedToUserIds;
       for (let index = 0; index < sibscibed.length; index++) {
         //        const element = sibscibed[index];
@@ -82,12 +85,20 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
+      if (!isUUID(request.params.id)) throw reply.code(400);
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
         equals: request.params.id,
       });
       if (userEntity === null) throw reply.code(404);
-      return userEntity;
+      if (!isUUID(request.body.userId)) throw reply.code(400);
+      const newUserEntity = await fastify.db.users.change(request.params.id, {
+        subscribedToUserIds: [
+          ...userEntity.subscribedToUserIds,
+          request.body.userId,
+        ],
+      });
+      return newUserEntity;
     }
   );
 
@@ -100,12 +111,21 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
+      if (!isUUID(request.params.id) || !isUUID(request.body.userId))
+        throw reply.code(400);
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
         equals: request.params.id,
       });
       if (userEntity === null) throw reply.code(404);
-      return userEntity;
+      const newUserEntity = await fastify.db.users.change(request.params.id, {
+        subscribedToUserIds: [
+          ...userEntity.subscribedToUserIds.filter(
+            (item) => item !== request.body.userId
+          ),
+        ],
+      });
+      return newUserEntity;
     }
   );
 
@@ -118,12 +138,17 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
+      if (!isUUID(request.params.id)) throw reply.code(400);
       const userEntity = await fastify.db.users.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      if (userEntity === null) throw reply.code(400);
-      return userEntity;
+      if (userEntity === null) throw reply.code(404);
+      const newUserEntity = await fastify.db.users.change(
+        request.params.id,
+        request.body
+      );
+      return newUserEntity;
     }
   );
 };

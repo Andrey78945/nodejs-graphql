@@ -92,20 +92,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
+      console.log(profilEntity);
       if (profilEntity === null) throw reply.code(400);
       console.log(profilEntity.city, 'profilEntity.city');
       console.log(profilEntity.memberTypeId, 'profilEntity.memberTypeId');
       const newProfileEntity = await fastify.db.profiles.change(
         request.params.id,
-        {
-          avatar: request.body.avatar ?? profilEntity.avatar,
-          sex: request.body.sex ?? profilEntity.avatar,
-          birthday: request.body.birthday ?? profilEntity.birthday,
-          country: request.body.country ?? profilEntity.country,
-          street: request.body.street ?? profilEntity.street,
-          city: request.body.city ?? profilEntity.city,
-          memberTypeId: request.body.memberTypeId ?? profilEntity.memberTypeId,
-        }
+        request.body
       );
       console.log(newProfileEntity.city, 'newProfileEntity.city');
       console.log(
