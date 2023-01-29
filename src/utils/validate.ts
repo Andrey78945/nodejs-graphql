@@ -9,3 +9,9 @@ export default function isUUID(uuid: string) {
   }
   return true;
 }
+
+export const isMemberType = (memberType: string): boolean => {
+  if (memberType === 'basic' || memberType === 'business') return true;
+
+  return false;
+};

@@ -2,6 +2,7 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
+import isUUID, { isMemberType } from '../../utils/validate';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -35,6 +36,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
+      if (!isUUID(request.body.userId)) throw reply.code(400);
+      if (!isMemberType(request.body.memberTypeId)) throw reply.code(400);
       const profilEntity = {
         avatar: request.body.avatar,
         sex: request.body.sex,
@@ -48,11 +51,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       const profiles: ProfileEntity[] = await fastify.db.profiles.findMany();
       if (profiles.some((item) => item.userId === request.body.userId))
         throw reply.code(400);
-      const idEntity = await fastify.db.profiles.findOne({
+      const userEntity = await fastify.db.users.findOne({
         key: 'id',
         equals: request.body.userId,
       });
-      if (idEntity === null) throw reply.code(400);
+      if (userEntity === null) throw reply.code(400);
       const newProfileEntity = await fastify.db.profiles.create(profilEntity);
 
       return newProfileEntity;
